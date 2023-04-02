@@ -25,8 +25,7 @@ export const App = () => {
     const getF = async () => {
       setIsLoaded(true);
       try {
-        if (!searchString || searchString === '*')
-          throw new Error('Заповни поле пошуку');
+        if (!searchString) throw new Error('Заповни поле пошуку');
 
         searhParams.current.searchUrlString = searchString;
         searhParams.current.pageUrlNumber = pageNumber;
@@ -58,13 +57,18 @@ export const App = () => {
 
   const onSubmit = evt => {
     evt.preventDefault();
+
     const inputString = evt.currentTarget.elements.searchString;
-    if (!inputString.value || inputString.value === '*') {
-      inputString.value = '*';
-      if (searhParams.current.searchUrlString === '*') inputString.value = '';
+    const inputValue = evt.currentTarget.elements.searchString.value.trim();
+    if (!inputValue) {
+      setPageNumber(0);
+    } else if (searchString === inputValue) {
+      Notiflix.Notify.info(`Вже шукали "${inputValue}" `);
+      inputString.value = '';
+      return;
     }
 
-    setSearchString(inputString.value.trim());
+    setSearchString(inputValue);
     setPageNumber(1);
     setHitsImg([]);
     totalUrlPages.current = 0;
@@ -90,9 +94,13 @@ export const App = () => {
   return (
     <>
       <Searchbar onSubmit={onSubmit} />
-      {pageNumber && <ImageGallery imageHits={hitsImg} getItemId={getImgId} />}
+      {Boolean(pageNumber) && (
+        <ImageGallery imageHits={hitsImg} getItemId={getImgId} />
+      )}
       {isLoaded ? <Loader /> : showLoadMore && <Button loadMore={loadMore} />}
-      {largeImageURL && <Modal image={largeImageURL} closeModal={closeModal} />}
+      {Boolean(largeImageURL) && (
+        <Modal image={largeImageURL} closeModal={closeModal} />
+      )}
     </>
   );
 };
